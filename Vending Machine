@@ -1,0 +1,159 @@
+#include <iostream>
+#include <iomanip>
+#include <limits>
+
+using namespace std;
+
+void menu() {
+    cout << "********************************************************************" << endl;
+    cout << "*                                                                  *" << endl;
+    cout << "*                      Jass Lunch Break Menu                       *" << endl;
+    cout << "*      1 .................... Hamburger $5.50                      *" << endl;
+    cout << "*      2 .................... Veggie Burger $4.50                  *" << endl;
+    cout << "*      3 .................... Chicken Tacos $5.50                  *" << endl;
+    cout << "*      4 .................... One Piece Fish & Chips $5.99         *" << endl;
+    cout << "*      5 .................... Two Piece Fish & Chips $7.50         *" << endl;
+    cout << "*      6 .................... Soda $1.75                           *" << endl;
+    cout << "*      7 .................... Chips $1.75                          *" << endl;
+    cout << "*      8 .................... Water $1.00                          *" << endl;
+    cout << "*      9 .................... End order                            *" << endl;
+    cout << "*                                                                  *" << endl;
+    cout << "********************************************************************" << endl;
+}
+
+void displayBill (double bill, double tax, double tip, double totBill) {
+    cout << fixed << setprecision(2);
+
+    cout << "Bill: $" << bill << endl;
+    cout << "Tax: $" << tax << endl;
+    cout << "Tip: $" << tip << endl;
+    cout << "Total amount due: $" << totBill << endl;
+}
+
+void displayChange (double totBill, double amtTendered) {
+    double change = amtTendered - totBill;
+
+    cout << fixed << setprecision(2);
+
+    cout << "Amount tendered: $" << amtTendered << endl;
+    cout << "Change due: $" << change << endl;
+}
+
+int main() {
+    double bill = 0;
+    double tax = 0;
+    double tip = 0;
+    double totBill = 0;
+    double amtTendered = 0;
+    double outStanding = 0;
+
+    int item = 0;
+    int tipP;
+    int quantity;
+
+    menu();
+    while(item != 9) {
+    cout << "Select an item from the menu: ";
+    cin >> item;
+    cout << '\n';
+
+    while (cin.fail() || item < 1 || item > 9) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid menu item, please enter again: ";
+            cin >> item;
+        }
+
+
+    if(item != 9) {
+        cout << "How many would you like (1-10): ";
+        cin >> quantity;
+        cout << '\n';
+    }
+
+
+        while (cin.fail() || quantity < 1 || quantity > 10) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid quantity amount, please enter again: ";
+                cin >> quantity;
+            }
+
+        switch(item) {
+            case 1:
+                bill + (quantity * 5.50);
+                break;
+            case 2:
+                bill += (4.50 * quantity);
+                break;
+            case 3:
+                bill += (5.50 * quantity);
+                break;
+            case 4:
+                bill += (5.99 * quantity);
+                break;
+            case 5:
+                bill += (7.50 * quantity);
+                break;
+            case 6:
+                bill += (1.75 * quantity);
+                break;
+            case 7:
+                bill += (1.75 * quantity);
+                break;
+            case 8:
+                bill += (1.00 * quantity);
+                break;
+        }
+
+        if(item == 9) {
+            break;
+        }
+    }
+        cout << "Thank you for ordering" << endl;
+        cout << "Enter the tip percentage (10-20): ";
+        cin >> tipP;
+
+        while (cin.fail() || tipP < 10 || tipP > 20) {
+            cin.clear();
+            cin.ignore(numeric_limits<streamsize>::max(), '\n');
+            cout << "Invalid tip percentage, please enter again (10-20): ";
+            cin >> tipP;
+    }
+
+    tip = bill * (tipP / 100.0);
+    tax = (bill + tip) * 0.13;
+    totBill = bill + tip + tax;
+
+    displayBill(bill, tax, tip, totBill);
+
+    cout << "Enter appropriate amount of money: $";
+    cin >> amtTendered;
+    cout << '\n';
+
+    while (cin.fail() || amtTendered < 0) {
+    cin.clear();
+    cin.ignore(numeric_limits<streamsize>::max(), '\n');
+    cout << "Invalid amount tendered, please enter again: $";
+    cin >> amtTendered;
+    }
+
+
+    while(amtTendered < totBill && amtTendered > 0) {
+        cout << "Your still owe $" << totBill - amtTendered << endl;
+        cout << "Please enter again: ";
+        cin >> outStanding;
+            while (cin.fail() || outStanding < 0) {
+                cin.clear();
+                cin.ignore(numeric_limits<streamsize>::max(), '\n');
+                cout << "Invalid amount tendered, please enter again: $";
+                cin >> outStanding;
+            }
+        amtTendered += outStanding;
+    }
+
+    displayChange(totBill, amtTendered);
+
+    cout << "Thank you, have a great day" << endl;
+
+}
