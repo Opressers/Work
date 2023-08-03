@@ -1,0 +1,81 @@
+#include <iostream>
+#include <iomanip>
+using namespace std;
+
+// Function to display the food menu and prices
+void displayMenu() {
+    cout << "JASS's Cafeteria" << endl;
+    cout << "1. Hamburger - $5.50" << endl;
+    cout << "2. Hot Dog - $3.25" << endl;
+    cout << "3. French Fries - $2.50" << endl;
+    cout << "4. Onion Rings - $3.75" << endl;
+    cout << "5. End Order" << endl;
+}
+
+// Function to display the bill
+void displayBill(double bill, double tax, double tip, double totBill)
+{
+    cout << fixed << setprecision(2);
+    cout << "Subtotal: $" << bill << endl;
+    cout << "Tax (13%): $" << tax << endl;
+    cout << "Tip (10-20%): $" << tip << endl;
+    cout << "Total Amount Due: $" << totBill << endl;
+}
+
+// Function to calculate and display the change due
+void displayChange(double totBill, double amtTendered)
+{
+    double change = amtTendered - totBill;
+    cout << fixed << setprecision(2);
+    cout << "Total Amount Due: $" << totBill << endl;
+    cout << "Amount Tendered: $" << amtTendered << endl;
+    cout << "Change Due: $" << change << endl;
+}
+
+int main() {
+    int choice;
+    double bill = 0.0, tax = 0.0, tip = 0.0, totBill = 0.0, amtTendered = 0.0;
+
+    do {
+        displayMenu();
+        cout << "Enter your choice: ";
+        cin >> choice;
+
+        switch (choice) {
+            case 1:
+                bill += 5.50;
+                break;
+            case 2:
+                bill += 3.25;
+                break;
+            case 3:
+                bill += 2.50;
+                break;
+            case 4:
+                bill += 3.75;
+                break;
+            case 5:
+                break;
+            default:
+                cout << "Invalid choice. Please try again." << endl;
+                break;
+        }
+
+    } while (choice != 5);
+
+    tax = bill * 0.13;
+    totBill = bill + tax;
+    cout << "Enter the amount tendered: $";
+    cin >> amtTendered;
+
+    while (amtTendered < totBill) {
+        cout << "Insufficient amount. Please enter an amount equal to or greater than the total bill: $";
+        cin >> amtTendered;
+    }
+
+    tip = totBill * 0.1; // assuming 10% tip
+    displayBill(bill, tax, tip, totBill);
+    displayChange(totBill, amtTendered);
+
+    return 0;
+}
