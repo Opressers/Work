@@ -1,4 +1,11 @@
-// Define fetch options for API calls
+if (window.location.origin !== "https://www.instagram.com") {
+  window.alert(
+    "Hey! You need to be on the instagram site before you run the code. I'm taking you there now but you're going to have to run the code into the console again.",
+  );
+  window.location.href = "https://www.instagram.com";
+  console.clear();
+}
+
 const fetchOptions = {
   credentials: "include",
   headers: {
@@ -7,77 +14,48 @@ const fetchOptions = {
   method: "GET",
 };
 
-let username; // Variable to store the Instagram username
+let username;
 
-// Function to resolve script permissions (placeholder implementation)
-window.resolveInstaScriptPermissions = () => {};
-
-// Asynchronous function that executes a given function with a notice prompt
-async function executeWithNotice(fn, ...args) {
-  // Check if the code is running on the Instagram site
-  if (window.location.origin !== "https://www.instagram.com") {
-    // Alert the user and redirect to Instagram site
-    window.alert("Hey! You need to be on the Instagram site before you run the code. I'm taking you there now, but you'll need to run the code into the console again.");
-    window.location.href = "https://www.instagram.com";
-    console.clear();
-    return;
-  }
-
-  // Create a promise to handle script permission resolution
-  const permission = new Promise(resolve => (window.resolveInstaScriptPermissions = resolve));
-
-  // Warning message shown to the user
-  const WARNING = `--- IMPORTANT PLEASE READ ---\n\nHey! \nNo worries, everything is fine. Before starting, let me explain how this works and share some advice.\nFirst, never blindly paste code into the console unless you understand it.\nAlthough this code isn't malicious, the developer console is risky unless you're confident in your abilities.\nPasting code you don't comprehend is like giving your phone to a stranger.\nAnything you can do on Instagram's website or app can be done through code in the developer console. Be very cautious!\n\nHow this script works:\n(APIs allow your browser to communicate with Instagram's servers)\n1. We use the Instagram search API with your username to obtain your User ID, which identifies your account on Instagram.\n2. We call the 'following' API endpoint with your user ID.\nThis mimics scrolling through your own Instagram following list, with pauses between requests to avoid looking like a bot.\n3. We repeat this process for the 'followers' API endpoint, creating lists of your followers and followings.\n4. We compare the lists, displaying the difference as 'People who don't follow you back' and vice versa.\n\nNow that you know how it works, do you want to continue? (If not, close this tab.)\n`;
-
-  // Display the warning message with a button to continue
-  document.write(`<pre style='white-space: pre-wrap;word-wrap: break-word;'>${WARNING}</pre>
-  <br />
-  <button style='cursor:pointer;padding: 1rem;box-shadow: 4px 5px 1px #b0b0b0;font-size: 18px;background: #00b894; color: white;border-radius: 10px;' onClick="window.resolveInstaScriptPermissions()">OK I understand and want to continue</button>`);
-
-  // Wait for permission resolution before proceeding
-  await permission;
-
-  // Display acknowledgment message and execute the function with arguments
-  document.write("<br/><p color='green;font-weight: bolder;'>Ok, thanks. Look back at the console to see the output. Refreshing this tab will also make everything go back to normal.</p>")
-  return await fn(...args);
-}
-
-// Utility functions for time delays and random numbers
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 const random = (min, max) => Math.ceil(Math.random() * (max - min)) + min;
 
-// Recursive function to handle pagination logic for API calls
+// This function handles all of the pagination logic
+// Calls the API recursively until there are no more pages to load
 const concatFriendshipsApiResponse = async (
   list,
   user_id,
   count,
-  next_max_id = ""
+  next_max_id = "",
 ) => {
-  // Build API URL for the specific list and pagination
   let url = `https://www.instagram.com/api/v1/friendships/${user_id}/${list}/?count=${count}`;
   if (next_max_id) {
     url += `&max_id=${next_max_id}`;
   }
 
-  // Fetch data from the API
   const data = await fetch(url, fetchOptions).then((r) => r.json());
 
   if (data.next_max_id) {
-    // Pause between requests to avoid rate limiting
     const timeToSleep = random(100, 500);
-    console.log(`Loaded ${data.users.length} ${list}. Sleeping ${timeToSleep}ms to avoid rate limiting`);
+    console.log(
+      `Loaded ${data.users.length} ${list}. Sleeping ${timeToSleep}ms to avoid rate limiting`,
+    );
+
     await sleep(timeToSleep);
 
-    // Recursively call the function with the next_max_id to fetch more data
     return data.users.concat(
-      await concatFriendshipsApiResponse(list, user_id, count, data.next_max_id)
+      await concatFriendshipsApiResponse(
+        list,
+        user_id,
+        count,
+        data.next_max_id,
+      ),
     );
   }
 
   return data.users;
 };
 
-// Helper methods for fetching followers and followings
+// helper methods to make the code a bit more readable
 const getFollowers = (user_id, count = 50, next_max_id = "") => {
   return concatFriendshipsApiResponse("followers", user_id, count, next_max_id);
 };
@@ -86,48 +64,35 @@ const getFollowing = (user_id, count = 50, next_max_id = "") => {
   return concatFriendshipsApiResponse("following", user_id, count, next_max_id);
 };
 
-// Function to get the User ID from the provided username
 const getUserId = async (username) => {
-  // Fetch search data using the Instagram search API
   let user = username;
+
   const lower = user.toLowerCase();
   const url = `https://www.instagram.com/api/v1/web/search/topsearch/?context=blended&query=${lower}&include_reel=false`;
   const data = await fetch(url, fetchOptions).then((r) => r.json());
 
-  // Find the User ID for the provided username
   const result = data.users?.find(
-    (result) => result.user.username.toLowerCase() === lower
+    (result) => result.user.username.toLowerCase() === lower,
   );
 
   return result?.user?.pk || null;
 };
 
-// Function to get the friendship statistics of the provided username
 const getUserFriendshipStats = async (username) => {
-  // Check if the example username is provided and prompt the user if necessary
-  if (username === "example_username") {
-    username = window.prompt(
-      "Hey, it looks like you forgot to change the username variable. No worries, we'll update it right now. What's your username?"
-    );
-  }
-
-  // Get the User ID using the provided username
   const user_id = await getUserId(username);
 
   if (!user_id) {
-    throw new Error(`Could not find a user with the username ${username}`);
+    throw new Error(`Could not find user with username ${username}`);
   }
 
-  // Fetch followers and followings for the user
   const followers = await getFollowers(user_id);
   const following = await getFollowing(user_id);
 
-  // Create sets of usernames for efficient comparison
   const followersUsernames = followers.map((follower) =>
-    follower.username.toLowerCase()
+    follower.username.toLowerCase(),
   );
   const followingUsernames = following.map((followed) =>
-    followed.username.toLowerCase()
+    followed.username.toLowerCase(),
   );
 
   const followerSet = new Set(followersUsernames);
@@ -139,20 +104,19 @@ const getUserFriendshipStats = async (username) => {
     followerSet.size,
     "followers and ",
     followingSet.size,
-    " following."
+    " following.",
   );
 
   console.log(
-    `If this doesn't seem right, then some of the output might be inaccurate`
+    `If this doesn't seem right then some of the output might be inaccurate`,
   );
 
-  // Find people who don't follow the user back and vice versa
   const PeopleIDontFollowBack = Array.from(followerSet).filter(
-    (follower) => !followingSet.has(follower)
+    (follower) => !followingSet.has(follower),
   );
 
   const PeopleNotFollowingMeBack = Array.from(followingSet).filter(
-    (following) => !followerSet.has(following)
+    (following) => !followerSet.has(following),
   );
 
   return {
@@ -161,9 +125,14 @@ const getUserFriendshipStats = async (username) => {
   };
 };
 
-// Replace "example_username" below with your Instagram username
+// Make sure you don't delete the quotes
+// Replace "example_username" below with your instagram username
+//
+// Change this:
 username = "example_username";
-
-// Execute the getUserFriendshipStats function with the provided username and display the result in the console
+//
+//
+//
+getUserFriendshipStats(username).then(console.log);
 executeWithNotice(getUserFriendshipStats, username).then(console.log);
 // ... (previous code)
